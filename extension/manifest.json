@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Medallas para Wikipedia",
+  "version": "1.0.0",
+  "description": "Inserta medallas en los editores de Wikipedia en español.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_title": "Insertar medalla",
+    "default_popup": "popup.html"
+  }
+}
