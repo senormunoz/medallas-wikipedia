@@ -6,7 +6,7 @@ for (const row of MEDALLAS) {
     const button=document.createElement('button');
     button.title=`${row.name}: ${item.label} — ${item.text}`;
     button.setAttribute('aria-label',`${row.name}: ${item.label}`);
-    const coin=document.createElement('span'); coin.className=`coin r${item.rank}`; coin.textContent=item.rank; button.append(coin);
+    const coin=document.createElement('span'); coin.className=item.symbol ? 'injury' : `coin r${item.rank}`; coin.textContent=item.symbol || item.rank; button.append(coin);
     button.addEventListener('click',async()=>{
       const buttons=[...grid.querySelectorAll('button')]; buttons.forEach(b=>b.disabled=true);
       status.textContent='Insertando…';

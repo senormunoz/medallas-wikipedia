@@ -1,6 +1,6 @@
 # Medallas para Wikipedia
 
-Extensión Chrome (Manifest V3) para Wikipedia en español. Selector de cuatro columnas y doce filas con las 36 opciones indicadas. No publica ni guarda ediciones.
+Extensión Chrome (Manifest V3) para Wikipedia en español. Selector de cuatro columnas con doce filas de medallas (36 opciones) y una última fila para insertar la cruz roja `[[Imagen:Injury icon 2.svg|15px]]`. No publica ni guarda ediciones.
 
 ## Instalación
 1. Descarga el proyecto y descomprime el ZIP.
