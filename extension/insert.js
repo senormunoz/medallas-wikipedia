@@ -10,10 +10,18 @@ async function insertMedal(wikitext) {
       if (surface.getMode() === 'source') {
         fragment.insertContent(wikitext).collapseToEnd().select();
       } else {
-        const result = await new mw.Api().post({action:'visualeditor',paction:'parse',page:mw.config.get('wgRelevantPageName'),wikitext});
+        const result = await new mw.Api().post({action:'visualeditor',paction:'parse',page:mw.config.get('wgRelevantPageName'),wikitext:`MEDALLASINICIO${wikitext}MEDALLASFIN`});
         const html = result?.visualeditor?.content;
         if (typeof html !== 'string' || !html) throw new Error('No se pudo convertir la medalla para el editor visual.');
-        fragment.insertHtml(html).collapseToEnd().select();
+        // Parse in an inline context so images and templates are not block nodes.
+        const inlineHtml = html.replace('MEDALLASINICIO', '').replace('MEDALLASFIN', '');
+        const converted = model.getDocument().newFromHtml(inlineHtml);
+        const range = converted.getDocumentRange();
+        if (converted.data.getType(0) !== 'paragraph' || converted.data.getType(range.end - 1) !== '/paragraph') {
+          throw new Error('No se pudo preparar la medalla como contenido en línea.');
+        }
+        // Exclude the parser's paragraph; retain the converted document's store.
+        fragment.insertDocument(converted, new ve.Range(1, range.end - 1)).collapseToEnd().select();
       }
       surface.getView().focus();
       return {ok:true};
@@ -23,8 +31,10 @@ async function insertMedal(wikitext) {
     if (!textarea) return {ok:false,message:'Activa «Editar» o «Editar código» y coloca el cursor donde quieras insertar la medalla.'};
     const editor = globalThis.jQuery?.(textarea);
     if (editor && typeof editor.textSelection === 'function') {
-      editor.textSelection('encapsulateSelection',{pre:wikitext,peri:'',post:'',replace:true});
-      editor.textSelection('setSelection',{start:editor.textSelection('getCaretPosition')});
+      const start = editor.textSelection('getCaretPosition');
+      editor.textSelection('replaceSelection', wikitext);
+      const end = start + wikitext.length;
+      editor.textSelection('setSelection', {start:end, end});
     } else {
       if (textarea.offsetParent === null) return {ok:false,message:'Este editor de código no es compatible. Desactiva el resaltado de sintaxis e inténtalo de nuevo.'};
       textarea.setRangeText(wikitext,textarea.selectionStart,textarea.selectionEnd,'end');
