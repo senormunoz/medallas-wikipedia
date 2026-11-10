@@ -6,7 +6,10 @@ test('rejects other origins',async()=>{assert.equal((await context({location:{ho
 test('plain source replaces selection and dispatches input',async()=>{let inserted,event;const t={offsetParent:{},selectionStart:2,selectionEnd:4,setRangeText(...args){inserted=args},dispatchEvent(e){event=e},focus(){}};const c=context({document:{querySelector:()=>t},Event:class{constructor(type){this.type=type}}});assert.equal((await c.insertMedal('medal')).ok,true);assert.deepEqual(inserted,['medal',2,4,'end']);assert.equal(event.type,'input')});
 test('visual cross uses the native Parsoid importer and inserts inline with cursor at end',async()=>{
  const calls=[];const targetDoc={};
- const converted={getDocumentRange:()=>({end:4}),data:{getType:i=>i===0?'paragraph':'/paragraph'}};
+ // VisualEditor's getType normalizes '/paragraph' to 'paragraph'.
+ const raw=[{type:'paragraph'},{type:'mwInlineImage'},{type:'/mwInlineImage'},{type:'/paragraph'}];
+ const converted={getDocumentRange:()=>({end:raw.length}),data:{getData:i=>raw[i],getType:i=>raw[i].type.replace(/^\//,'')}};
+ assert.equal(converted.data.getType(3),'paragraph');
  const html='<p>MEDALLASINICIO<span typeof="mw:File"><a href="./Archivo:Injury_icon_2.svg"><img resource="./Archivo:Injury_icon_2.svg" class="mw-file-element" width="15" height="15"></a></span>MEDALLASFIN</p>';
  const fragment={insertDocument(doc,range){assert.equal(doc,converted);assert.equal(range.start,1);assert.equal(range.end,3);calls.push('insert');return this},collapseToEnd(){calls.push('collapse');return this},select(){calls.push('select')}};
  const target={getSurface:()=>({getMode:()=> 'visual',getModel:()=>({getFragment:()=>fragment,getDocument:()=>targetDoc}),getView:()=>({focus(){calls.push('focus')}})}),async parseWikitextFragment(text,pst,doc){assert.equal(text,'MEDALLASINICIO[[Imagen:Injury icon 2.svg|15px]]MEDALLASFIN');assert.equal(pst,false);assert.equal(doc,targetDoc);return {visualeditor:{content:html}}}};

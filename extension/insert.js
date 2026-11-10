@@ -24,7 +24,8 @@ async function insertMedal(wikitext) {
         // clipboard mode, preserving MediaWiki image/template semantics.
         const converted = importer.createDocumentFromParsoidHtml(inlineHtml, targetDoc);
         const range = converted.getDocumentRange();
-        if (converted.data.getType(0) !== 'paragraph' || converted.data.getType(range.end - 1) !== '/paragraph') {
+        // getType() normalizes closing types, so inspect raw boundary elements.
+        if (converted.data.getData(0)?.type !== 'paragraph' || converted.data.getData(range.end - 1)?.type !== '/paragraph') {
           throw new Error('No se pudo preparar la medalla como contenido en línea.');
         }
         // Exclude the parser's paragraph; retain the converted document's store.
