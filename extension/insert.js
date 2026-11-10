@@ -10,12 +10,19 @@ async function insertMedal(wikitext) {
       if (surface.getMode() === 'source') {
         fragment.insertContent(wikitext).collapseToEnd().select();
       } else {
-        const result = await new mw.Api().post({action:'visualeditor',paction:'parse',page:mw.config.get('wgRelevantPageName'),wikitext:`MEDALLASINICIO${wikitext}MEDALLASFIN`});
+        const targetDoc = model.getDocument();
+        const importer = ve.ui?.MWWikitextStringTransferHandler?.static;
+        if (!target.parseWikitextFragment || !importer?.createDocumentFromParsoidHtml) {
+          throw new Error('El editor visual aún no está preparado. Vuelve a intentarlo.');
+        }
+        const result = await target.parseWikitextFragment(`MEDALLASINICIO${wikitext}MEDALLASFIN`, false, targetDoc);
         const html = result?.visualeditor?.content;
         if (typeof html !== 'string' || !html) throw new Error('No se pudo convertir la medalla para el editor visual.');
         // Parse in an inline context so images and templates are not block nodes.
         const inlineHtml = html.replace('MEDALLASINICIO', '').replace('MEDALLASFIN', '');
-        const converted = model.getDocument().newFromHtml(inlineHtml);
+        // Use VE's native wikitext importer: it strips parser IDs and converts in
+        // clipboard mode, preserving MediaWiki image/template semantics.
+        const converted = importer.createDocumentFromParsoidHtml(inlineHtml, targetDoc);
         const range = converted.getDocumentRange();
         if (converted.data.getType(0) !== 'paragraph' || converted.data.getType(range.end - 1) !== '/paragraph') {
           throw new Error('No se pudo preparar la medalla como contenido en línea.');
